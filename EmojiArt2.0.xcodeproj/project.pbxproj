@@ -72,23 +72,31 @@
 		1127CA932072ADA100F8A9BC /* EmojiArt2.0 */ = {
 			isa = PBXGroup;
 			children = (
+				1127CA9C2072ADA100F8A9BC /* Main.storyboard */,
+				11C2F54E20766F1200DAA0C9 /* EmojiArtView.swift */,
+				11C2F55020766F1200DAA0C9 /* EmojiArtView+Gestures.swift */,
+				11C2F55120766F1200DAA0C9 /* EmojiArtViewController.swift */,
+				11C8A105207D5E44006CDB6D /* Supporting Files */,
+				1127CAA42072ADA100F8A9BC /* Info.plist */,
+			);
+			path = EmojiArt2.0;
+			sourceTree = "<group>";
+		};
+		11C8A105207D5E44006CDB6D /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
 				1127CA942072ADA100F8A9BC /* AppDelegate.swift */,
 				1127CA962072ADA100F8A9BC /* DocumentBrowserViewController.swift */,
 				1127CA982072ADA100F8A9BC /* DocumentViewController.swift */,
 				1127CA9A2072ADA100F8A9BC /* EmojiArtDocument.swift */,
 				11C2F54D20766F1200DAA0C9 /* EmojiArt.swift */,
-				11C2F54E20766F1200DAA0C9 /* EmojiArtView.swift */,
-				11C2F55020766F1200DAA0C9 /* EmojiArtView+Gestures.swift */,
-				11C2F55120766F1200DAA0C9 /* EmojiArtViewController.swift */,
 				11C2F54F20766F1200DAA0C9 /* EmojiCollectionViewCell.swift */,
 				11C2F55220766F1200DAA0C9 /* ImageFetcher.swift */,
 				11C2F54C20766F1100DAA0C9 /* TextFieldCollectionViewCell.swift */,
-				1127CA9C2072ADA100F8A9BC /* Main.storyboard */,
 				1127CA9F2072ADA100F8A9BC /* Assets.xcassets */,
 				1127CAA12072ADA100F8A9BC /* LaunchScreen.storyboard */,
-				1127CAA42072ADA100F8A9BC /* Info.plist */,
 			);
-			path = EmojiArt2.0;
+			path = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

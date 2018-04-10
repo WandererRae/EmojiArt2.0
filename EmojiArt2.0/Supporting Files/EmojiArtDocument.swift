@@ -12,6 +12,8 @@ class EmojiArtDocument: UIDocument {
     
     var emojiArt: EmojiArt?
     
+    var thumbnail: UIImage?
+    
     override func contents(forType typeName: String) throws -> Any {
         return emojiArt?.json ?? Data()
     }

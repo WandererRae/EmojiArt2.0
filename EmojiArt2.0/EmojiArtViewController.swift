@@ -27,12 +27,13 @@
     
     
     
-    // MARK: Definitions
+    // MARK: Public var
     
     var emojiArtView = EmojiArtView()
     var document: EmojiArtDocument?
     var emojis = "🐉🐅🕊🐿🍎".map {String($0)}
     var imageFetcher: ImageFetcher!
+    private var suppressBadURLWarning = false
     
     var emojiArtBackgroundImage: (url: URL?, image: UIImage?) {
         
@@ -97,6 +98,7 @@
     }
     
     
+    // MARK: Private var
     
     private var addingEmoji = false
     private var _emojiArtBackgroundImageURL: URL?
@@ -105,7 +107,11 @@
         return UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.preferredFont(forTextStyle: .body).withSize(32.0))
     }
     
+    private var documentObserver: NSObjectProtocol?
+    private var emojiArtViewObserver: NSObjectProtocol?
+
     
+    // MARK: IBOutlet
     
     @IBOutlet weak var dropZone: UIView! {
         
@@ -142,9 +148,19 @@
     
 
     // MARK: View Lifecycle
-
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        documentObserver = NotificationCenter.default.addObserver(
+            
+            forName: Notification.Name.UIDocumentStateChanged,
+            object: document,
+            queue: OperationQueue.main,
+            using: { notification in
+                print("documentState changed to \(self.document!.documentState)")
+            }
+        )
         
         document?.open { success in
             
@@ -152,6 +168,14 @@
                 
                 self.title = self.document?.localizedName
                 self.emojiArt = self.document?.emojiArt
+                self.emojiArtViewObserver = NotificationCenter.default.addObserver(
+                    forName: .EmojiArtViewDidChange,
+                    object: self.emojiArtView,
+                    queue: OperationQueue.main,
+                    using: { notification in
+                        self.documentChanged()
+                }
+                )
             }
         }
     }
@@ -160,7 +184,7 @@
     
     // MARK: IB Actions
     
-    @IBAction func save(_ sender: UIBarButtonItem? = nil) {
+    @IBAction func documentChanged(_ sender: UIBarButtonItem? = nil) {
         //Save button for documents is bad form.  There should be a delegate that tells the VC when a change is made (autosave).
 
         document?.emojiArt = emojiArt
@@ -174,17 +198,21 @@
     
     @IBAction func close(_ sender: UIBarButtonItem) {
         
-        save()
-        //Only because there's no autosave
-        
+        if let observer = emojiArtViewObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+                
         if document?.emojiArt != nil {
             
             document?.thumbnail = emojiArtView.snapshot
-            // TODO: Yes, EmojiArtDocument, you do have member "thumbnail"
         }
         
         dismiss(animated: true) {
-            self.document?.close()
+            self.document?.close { success in
+                if let observer = self.documentObserver {
+                    NotificationCenter.default.removeObserver(observer)
+                }
+            }
         }
     }
     
@@ -398,7 +426,22 @@
             
             if let url = nsurls.first as? URL {
                 
-                self.imageFetcher.fetch(url)
+//                self.imageFetcher.fetch(url)
+                
+                DispatchQueue.global(qos: .userInitiated).async {
+                    
+                    if let imageData = try? Data(contentsOf: url.imageURL), let image = UIImage(data: imageData) {
+                        
+                        DispatchQueue.main.async {
+                            
+                            self.emojiArtBackgroundImage = (url, image)
+                            self.documentChanged()
+                            
+                        }
+                    }else {
+                        self.presentBadURLWarning(for: url)
+                    }
+                }
             }
         }
         
@@ -424,5 +467,27 @@
     func viewForZooming (in scrollView: UIScrollView) -> UIView? {
         
         return emojiArtView
+    }
+    
+    // MARK: Alert
+    private func presentBadURLWarning(for url: URL?) {
+        
+        if suppressBadURLWarning != true {
+            
+            let alert = UIAlertController(title: "Image Drop Failed", message: "Couldn't transfer the dropped image from its source.\n Show this warning in the future?", preferredStyle: .alert)
+            
+            alert.addAction(UIAlertAction(
+                title: "Keep Warning",
+                style: .default))
+            alert.addAction(UIAlertAction(
+                title: "StopWarning",
+                style: .destructive,
+                handler: {action in
+                    self.suppressBadURLWarning = true
+            }
+            ))
+            
+            present(alert, animated: true)
+        }
     }
  }
