@@ -23,7 +23,7 @@
  
  
  
- class EmojiArtViewController: UIViewController, UIDropInteractionDelegate, UIScrollViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDragDelegate, UICollectionViewDropDelegate {
+ class EmojiArtViewController: UIViewController, UIDropInteractionDelegate, UIScrollViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDragDelegate, UICollectionViewDropDelegate, UIPopoverPresentationControllerDelegate {
     
     
     
@@ -33,7 +33,6 @@
     var document: EmojiArtDocument?
     var emojis = "🐉🐅🕊🐿🍎".map {String($0)}
     var imageFetcher: ImageFetcher!
-    private var suppressBadURLWarning = false
     
     var emojiArtBackgroundImage: (url: URL?, image: UIImage?) {
         
@@ -102,10 +101,16 @@
     
     private var addingEmoji = false
     private var _emojiArtBackgroundImageURL: URL?
+    private var embeddedDocInfo: DocumentInfoViewController?
+    private var suppressBadURLWarning = false
+
     
     private var font: UIFont {
         return UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.preferredFont(forTextStyle: .body).withSize(32.0))
     }
+    private let emojiCollectionCellHeight: CGFloat = 80
+    private let emojiCollectionCellWidth: CGFloat = 80
+    private let emojiCollectionCellWidthMod: CGFloat = 4
     
     private var documentObserver: NSObjectProtocol?
     private var emojiArtViewObserver: NSObjectProtocol?
@@ -123,6 +128,9 @@
     
     @IBOutlet weak var scrollViewHeight: NSLayoutConstraint!
     @IBOutlet weak var scrollViewWidth: NSLayoutConstraint!
+    
+    @IBOutlet weak var embeddedDocInfoHeight: NSLayoutConstraint!
+    @IBOutlet weak var embeddedDocInfoWidth: NSLayoutConstraint!
     
     @IBOutlet weak var scrollView: UIScrollView! {
         
@@ -159,6 +167,11 @@
             queue: OperationQueue.main,
             using: { notification in
                 print("documentState changed to \(self.document!.documentState)")
+                if self.document!.documentState == .normal, let docInfoVC = self.embeddedDocInfo {
+                    docInfoVC.document = self.document
+                    self.embeddedDocInfoWidth.constant = docInfoVC.preferredContentSize.width
+                    self.embeddedDocInfoHeight.constant = docInfoVC.preferredContentSize.height
+                }
             }
         )
         
@@ -184,8 +197,7 @@
     
     // MARK: IB Actions
     
-    @IBAction func documentChanged(_ sender: UIBarButtonItem? = nil) {
-        //Save button for documents is bad form.  There should be a delegate that tells the VC when a change is made (autosave).
+    func documentChanged() {
 
         document?.emojiArt = emojiArt
         if document?.emojiArt != nil {
@@ -195,8 +207,7 @@
     }
     
     
-    
-    @IBAction func close(_ sender: UIBarButtonItem) {
+    @IBAction func close(_ sender: UIBarButtonItem? = nil) {
         
         if let observer = emojiArtViewObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -207,9 +218,12 @@
             document?.thumbnail = emojiArtView.snapshot
         }
         
-        dismiss(animated: true) {
+        presentingViewController?.dismiss(animated: true) {
+            
             self.document?.close { success in
+                
                 if let observer = self.documentObserver {
+                    
                     NotificationCenter.default.removeObserver(observer)
                 }
             }
@@ -286,6 +300,35 @@
     
     
     
+    
+    // MARK: Navigation
+    
+    override func prepare(for segue:UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "Show Document Info" {
+            if let destination = segue.destination.contents as? DocumentInfoViewController {
+                document?.thumbnail = emojiArtView.snapshot
+                destination.document = document
+                if let ppc = destination.popoverPresentationController {
+                    ppc.delegate = self
+                }
+            }
+        } else if segue.identifier == "EmbedDocumentInfoSegue" {
+            embeddedDocInfo = segue.destination.contents as? DocumentInfoViewController
+        }
+    }
+    
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+        ) -> UIModalPresentationStyle {
+        return .none
+    }
+
+    @IBAction func close(bySegue: UIStoryboardSegue) {
+        close()
+    }
+    
+    
     // MARK: Text field protocol
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -297,13 +340,12 @@
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         
         if addingEmoji && indexPath.section == 0 { // Make text field wider while user is entering text
-            return CGSize(width:300, height: 80)
+            return CGSize(width: emojiCollectionCellWidth * emojiCollectionCellWidthMod, height: emojiCollectionCellHeight)
             
         } else { // return cell to normal size
-            return CGSize(width: 80, height: 80)
+            return CGSize(width: emojiCollectionCellWidth, height: emojiCollectionCellHeight)
         }
     }
-    
     
     
     // MARK: Drag and Drop Protocol
