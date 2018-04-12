@@ -7,6 +7,7 @@
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -196,15 +197,23 @@
                                 <action selector="close:" destination="UwI-ac-d2j" id="YZG-7W-RcW"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" title="Inspect" id="IJj-1C-VmL">
-                            <connections>
-                                <segue destination="9Pm-9W-6QE" kind="popoverPresentation" identifier="Show Document Info" popoverAnchorBarButtonItem="IJj-1C-VmL" id="Z76-hG-Wxn">
-                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
-                                </segue>
-                            </connections>
-                        </barButtonItem>
+                        <rightBarButtonItems>
+                            <barButtonItem title="Inspect" id="IJj-1C-VmL">
+                                <connections>
+                                    <segue destination="9Pm-9W-6QE" kind="popoverPresentation" identifier="Show Document Info" popoverAnchorBarButtonItem="IJj-1C-VmL" id="Z76-hG-Wxn">
+                                        <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                    </segue>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem systemItem="camera" id="soT-EZ-Auu">
+                                <connections>
+                                    <action selector="takeBackgroundPhoto:" destination="UwI-ac-d2j" id="QnD-DH-wzY"/>
+                                </connections>
+                            </barButtonItem>
+                        </rightBarButtonItems>
                     </navigationItem>
                     <connections>
+                        <outlet property="cameraButton" destination="soT-EZ-Auu" id="Fqf-Bj-2O9"/>
                         <outlet property="dropZone" destination="DGU-Oo-h4W" id="0ek-2d-c86"/>
                         <outlet property="embeddedDocInfoHeight" destination="tKO-xn-DEd" id="hDA-xf-Hla"/>
                         <outlet property="embeddedDocInfoWidth" destination="vJc-2A-eT5" id="Im9-D3-ZYg"/>
@@ -387,6 +396,7 @@
                             <constraint firstItem="w5v-FR-aaC" firstAttribute="centerY" secondItem="ElM-2E-ZIZ" secondAttribute="centerY" id="gPU-a9-W25"/>
                             <constraint firstItem="w5v-FR-aaC" firstAttribute="centerX" secondItem="ElM-2E-ZIZ" secondAttribute="centerX" id="zlq-Q3-O75"/>
                         </constraints>
+                        <viewLayoutGuide key="safeArea" id="ta2-CN-DMd"/>
                     </view>
                     <connections>
                         <outlet property="createdLabel" destination="2uH-5u-HBy" id="UXZ-MG-ow9"/>
